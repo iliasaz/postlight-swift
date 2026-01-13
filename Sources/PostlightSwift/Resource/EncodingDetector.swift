@@ -1,3 +1,6 @@
+#if canImport(CoreFoundation)
+import CoreFoundation
+#endif
 import Foundation
 
 /// Detects and handles character encoding for HTML content.
@@ -267,6 +270,7 @@ public struct EncodingDetector: Sendable {
             return .japaneseEUC
         case "iso2022jp":
             return .iso2022JP
+        #if canImport(CoreFoundation) && !os(Linux)
         case "gb2312", "gbk", "gb18030":
             // Foundation doesn't have direct GB2312, use closest
             return String.Encoding(rawValue: CFStringConvertEncodingToNSStringEncoding(CFStringEncoding(CFStringEncodings.GB_18030_2000.rawValue)))
@@ -276,6 +280,7 @@ public struct EncodingDetector: Sendable {
             return String.Encoding(rawValue: CFStringConvertEncodingToNSStringEncoding(CFStringEncoding(CFStringEncodings.EUC_KR.rawValue)))
         case "koi8r":
             return String.Encoding(rawValue: CFStringConvertEncodingToNSStringEncoding(CFStringEncoding(CFStringEncodings.KOI8_R.rawValue)))
+        #endif
         default:
             return nil
         }
