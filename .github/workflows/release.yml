@@ -1,0 +1,73 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  # Build release binaries
+  build:
+    name: Build (${{ matrix.target }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: macos-14
+            target: macos-arm64
+            container: ''
+          - os: ubuntu-latest
+            target: linux-x86_64
+            container: swift:6.0-jammy
+    container: ${{ matrix.container || '' }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Select Xcode
+        if: matrix.os == 'macos-14'
+        run: sudo xcode-select -s /Applications/Xcode_15.2.app
+
+      - name: Build Release
+        run: swift build -c release --product postlight-cli
+
+      - name: Create Archive
+        run: |
+          mkdir -p dist
+          cp .build/release/postlight-cli dist/
+          cd dist
+          tar -czvf postlight-cli-${{ matrix.target }}.tar.gz postlight-cli
+          rm postlight-cli
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: postlight-cli-${{ matrix.target }}
+          path: dist/postlight-cli-${{ matrix.target }}.tar.gz
+
+  # Create GitHub Release
+  release:
+    name: Create Release
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            artifacts/postlight-cli-macos-arm64/postlight-cli-macos-arm64.tar.gz
+            artifacts/postlight-cli-linux-x86_64/postlight-cli-linux-x86_64.tar.gz
+          generate_release_notes: true
+          draft: false
+          prerelease: ${{ contains(github.ref, 'alpha') || contains(github.ref, 'beta') || contains(github.ref, 'rc') }}
