@@ -2,6 +2,7 @@
 
 A Swift implementation of the [Postlight Parser](https://github.com/postlight/parser) - a library that extracts clean article content from any web page.
 
+[![GitHub release](https://img.shields.io/github/v/release/iliasaz/postlight-swift)](https://github.com/iliasaz/postlight-swift/releases/latest)
 [![CI](https://github.com/iliasaz/postlight-swift/actions/workflows/ci.yml/badge.svg)](https://github.com/iliasaz/postlight-swift/actions/workflows/ci.yml)
 [![Swift 6.0](https://img.shields.io/badge/Swift-6.0-orange.svg)](https://swift.org)
 [![Platforms](https://img.shields.io/badge/Platforms-macOS%20|%20iOS%20|%20Linux-blue.svg)](https://swift.org)
