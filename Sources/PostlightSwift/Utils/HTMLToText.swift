@@ -42,6 +42,16 @@ public struct HTMLToText: Sendable {
             return ""
         }
 
+        // Skip ad-related elements and other promotional noise
+        if let className = element.className {
+            let skipPatterns = ["ad-unit", "ad-slot", "advertisement", "sponsored", "promo", "inline-cta"]
+            for pattern in skipPatterns {
+                if className.contains(pattern) {
+                    return ""
+                }
+            }
+        }
+
         switch tag {
         // Block elements that need line breaks
         case "p", "div", "article", "section", "main", "header", "footer", "aside", "nav":
@@ -132,15 +142,21 @@ public struct HTMLToText: Sendable {
     }
 
     private func processChildren(_ element: Element) throws -> String {
-        let children = element.children()
+        // Get all child nodes including text nodes
+        let nodes = element.childNodes()
 
-        if children.isEmpty {
+        if nodes.isEmpty {
             return try element.text()
         }
 
         var result = ""
-        for child in children {
-            result += try convertElement(child)
+        for node in nodes {
+            if node.isElement, let childElement = node.element {
+                result += try convertElement(childElement)
+            } else {
+                // Text node - add the text directly
+                result += node.text
+            }
         }
 
         // If we got nothing from children, fall back to text

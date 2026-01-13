@@ -134,6 +134,23 @@ public final class Element: @unchecked Sendable {
         element.children().array().map { Element(element: $0, document: document) }
     }
 
+    /// Gets all child nodes (elements and text nodes) as an array of (isElement, text, element?).
+    /// Returns tuples: (true, "", element) for elements, (false, text, nil) for text nodes.
+    public func childNodes() -> [(isElement: Bool, text: String, element: Element?)] {
+        var nodes: [(isElement: Bool, text: String, element: Element?)] = []
+        for node in element.getChildNodes() {
+            if let elementNode = node as? SwiftSoup.Element {
+                nodes.append((true, "", Element(element: elementNode, document: document)))
+            } else if let textNode = node as? SwiftSoup.TextNode {
+                let text = textNode.text()
+                if !text.isEmpty {
+                    nodes.append((false, text, nil))
+                }
+            }
+        }
+        return nodes
+    }
+
     /// Gets all sibling elements.
     public func siblings() -> [Element] {
         element.siblingElements().array().map { Element(element: $0, document: document) }
