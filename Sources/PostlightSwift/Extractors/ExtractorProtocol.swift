@@ -62,14 +62,28 @@ public actor ExtractorRegistry {
     private var customExtractors: [String: any Extractor] = [:]
 
     private init() {
-        // Register built-in extractors
-        registerBuiltInExtractors()
-    }
+        // Register built-in site-specific extractors
+        // News outlets
+        extractors["www.nytimes.com"] = NYTimesExtractor()
+        extractors["www.bbc.com"] = BBCExtractor()
+        extractors["www.theguardian.com"] = GuardianExtractor()
+        extractors["www.washingtonpost.com"] = WashingtonPostExtractor()
+        extractors["www.cnn.com"] = CNNExtractor()
+        extractors["www.reuters.com"] = ReutersExtractor()
 
-    /// Registers built-in site-specific extractors.
-    private func registerBuiltInExtractors() {
-        // Will be populated with custom extractors
-        // e.g., register(NYTimesExtractor())
+        // Tech publications
+        extractors["techcrunch.com"] = TechCrunchExtractor()
+        extractors["www.wired.com"] = WiredExtractor()
+        extractors["arstechnica.com"] = ArsTechnicaExtractor()
+        extractors["www.theverge.com"] = TheVergeExtractor()
+
+        // Platforms
+        extractors["medium.com"] = MediumExtractor()
+        extractors["substack.com"] = SubstackExtractor()
+        extractors["news.ycombinator.com"] = HackerNewsExtractor()
+
+        // Reference
+        extractors["en.wikipedia.org"] = WikipediaExtractor()
     }
 
     /// Registers an extractor for its domain.

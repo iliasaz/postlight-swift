@@ -90,7 +90,7 @@ struct PostlightCLI: AsyncParsableCommand {
             }
             let name = String(parts[0])
             let selectorStr = String(parts[1])
-            let selector: Selector
+            let selector: PostlightSwift.Selector
             if selectorStr.contains("|") {
                 let selectorParts = selectorStr.split(separator: "|")
                 selector = .cssWithAttribute(String(selectorParts[0]), attribute: String(selectorParts[1]))
@@ -107,7 +107,7 @@ struct PostlightCLI: AsyncParsableCommand {
             }
             let name = String(parts[0])
             let selectorStr = String(parts[1])
-            let selector: Selector
+            let selector: PostlightSwift.Selector
             if selectorStr.contains("|") {
                 let selectorParts = selectorStr.split(separator: "|")
                 selector = .cssWithAttribute(String(selectorParts[0]), attribute: String(selectorParts[1]))

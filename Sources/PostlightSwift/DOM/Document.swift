@@ -7,7 +7,7 @@ import SwiftSoup
 /// to the original JavaScript implementation using cheerio.
 public final class Document: @unchecked Sendable {
     /// The underlying SwiftSoup document.
-    private let doc: SwiftSoup.Document
+    private var doc: SwiftSoup.Document
 
     /// The base URL for resolving relative links.
     public let baseURL: URL?

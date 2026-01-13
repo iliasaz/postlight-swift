@@ -105,8 +105,11 @@ final class ParserTests: XCTestCase {
         <body>
             <article>
                 <h2>Section Header</h2>
-                <p>This is <strong>bold</strong> and <em>italic</em> text.</p>
-                <p>Here is a <a href="https://example.com">link</a>.</p>
+                <p>This is <strong>bold</strong> and <em>italic</em> text with enough content to pass the extraction threshold.</p>
+                <p>Here is a <a href="https://example.com">link</a> that should appear in the extracted content.</p>
+                <p>We need to add more paragraphs to ensure the content extractor has enough text to work with properly.</p>
+                <p>The content extraction algorithm requires a minimum amount of text to determine the main article content.</p>
+                <p>Adding several more sentences here to make sure we have over two hundred characters of meaningful content.</p>
             </article>
         </body>
         </html>
@@ -130,8 +133,11 @@ final class ParserTests: XCTestCase {
         <head><title>Test</title></head>
         <body>
             <article>
-                <p>This is plain text content.</p>
-                <p>Second paragraph.</p>
+                <p>This is plain text content that will be extracted by the parser.</p>
+                <p>Second paragraph with additional content to ensure proper extraction.</p>
+                <p>Third paragraph to add more meaningful content for the extraction algorithm.</p>
+                <p>Fourth paragraph because we need enough text to meet the minimum content threshold.</p>
+                <p>Fifth paragraph ensures we have well over two hundred characters of article text.</p>
             </article>
         </body>
         </html>
@@ -158,7 +164,11 @@ final class ParserTests: XCTestCase {
         <head><title>Test</title></head>
         <body>
             <article>
-                <p>One two three four five six seven eight nine ten.</p>
+                <p>One two three four five six seven eight nine ten words in this sentence.</p>
+                <p>Here is another paragraph with plenty of words to count properly.</p>
+                <p>The content extraction algorithm needs enough text to determine article content.</p>
+                <p>Adding more paragraphs ensures we meet the minimum content length threshold.</p>
+                <p>This final paragraph brings us well over the two hundred character minimum.</p>
             </article>
         </body>
         </html>

@@ -6,7 +6,7 @@ import Foundation
 /// which uses various heuristics to identify the most likely article content.
 public struct ContentExtractor: Sendable {
     /// Options for content extraction.
-    public struct Options {
+    public struct Options: Sendable {
         /// Remove elements with class/id matching unlikely content patterns.
         public var stripUnlikelyCandidates: Bool = true
 
@@ -15,6 +15,17 @@ public struct ContentExtractor: Sendable {
 
         /// Conditionally clean tags based on content analysis.
         public var cleanConditionally: Bool = true
+
+        /// Creates default content extraction options.
+        public init(
+            stripUnlikelyCandidates: Bool = true,
+            weightNodes: Bool = true,
+            cleanConditionally: Bool = true
+        ) {
+            self.stripUnlikelyCandidates = stripUnlikelyCandidates
+            self.weightNodes = weightNodes
+            self.cleanConditionally = cleanConditionally
+        }
     }
 
     public init() {}

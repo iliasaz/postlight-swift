@@ -31,6 +31,7 @@ extension GenericExtractor {
         let wordCount = extractWordCount(content: content)
         let direction = extractDirection(title: title)
         let (canonicalURL, domain) = try extractURLAndDomain(document: document, url: url)
+        let nextPageURL = try extractNextPageURL(document: document, url: url)
 
         return ParsedArticle(
             title: title,
@@ -44,7 +45,7 @@ extension GenericExtractor {
             direction: direction,
             url: canonicalURL ?? url,
             domain: domain,
-            nextPageURL: nil,
+            nextPageURL: nextPageURL,
             totalPages: 1,
             renderedPages: 1
         )
@@ -293,44 +294,13 @@ extension GenericExtractor {
     }
 
     private func parseDate(_ string: String) -> Date? {
-        let formatters: [ISO8601DateFormatter] = {
-            let full = ISO8601DateFormatter()
-            full.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        DateParser.parse(string)
+    }
 
-            let standard = ISO8601DateFormatter()
-            standard.formatOptions = [.withInternetDateTime]
+    // MARK: - Next Page Extraction
 
-            let dateOnly = ISO8601DateFormatter()
-            dateOnly.formatOptions = [.withFullDate]
-
-            return [full, standard, dateOnly]
-        }()
-
-        for formatter in formatters {
-            if let date = formatter.date(from: string) {
-                return date
-            }
-        }
-
-        // Try common date formats
-        let dateFormatter = DateFormatter()
-        let formats = [
-            "yyyy-MM-dd'T'HH:mm:ssZ",
-            "yyyy-MM-dd'T'HH:mm:ss",
-            "yyyy-MM-dd HH:mm:ss",
-            "yyyy-MM-dd",
-            "MM/dd/yyyy",
-            "MMMM d, yyyy",
-            "d MMMM yyyy",
-        ]
-
-        for format in formats {
-            dateFormatter.dateFormat = format
-            if let date = dateFormatter.date(from: string) {
-                return date
-            }
-        }
-
-        return nil
+    func extractNextPageURL(document: Document, url: URL) throws -> URL? {
+        let nextPageExtractor = NextPageExtractor()
+        return try nextPageExtractor.extract(document: document, currentURL: url)
     }
 }

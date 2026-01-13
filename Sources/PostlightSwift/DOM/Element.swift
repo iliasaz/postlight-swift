@@ -141,12 +141,12 @@ public final class Element: @unchecked Sendable {
 
     /// Gets the next sibling element.
     public func nextSibling() -> Element? {
-        element.nextElementSibling().map { Element(element: $0, document: document) }
+        (try? element.nextElementSibling()).map { Element(element: $0, document: document) }
     }
 
     /// Gets the previous sibling element.
     public func previousSibling() -> Element? {
-        element.previousElementSibling().map { Element(element: $0, document: document) }
+        (try? element.previousElementSibling()).map { Element(element: $0, document: document) }
     }
 
     // MARK: - Selection
@@ -223,7 +223,7 @@ public final class Element: @unchecked Sendable {
             Double(attrOrNil("score") ?? "0") ?? 0
         }
         set {
-            try? attr("score", String(newValue))
+            _ = try? attr("score", String(newValue))
         }
     }
 }
