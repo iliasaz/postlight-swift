@@ -2,20 +2,12 @@ import ArgumentParser
 import Foundation
 import PostlightSwift
 
-#if canImport(Darwin)
-import Darwin
-#elseif canImport(Glibc)
-import Glibc
-#endif
-
-/// Thread-safe stderr printing
+/// Thread-safe stderr printing using FileHandle
 @inline(__always)
 nonisolated func printStderr(_ message: String) {
-    #if canImport(Darwin)
-    fputs(message, Darwin.stderr)
-    #elseif canImport(Glibc)
-    fputs(message, Glibc.stderr)
-    #endif
+    if let data = message.data(using: .utf8) {
+        try? FileHandle.standardError.write(contentsOf: data)
+    }
 }
 
 /// Command-line interface for the Postlight Parser.
