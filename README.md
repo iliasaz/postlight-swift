@@ -236,11 +236,15 @@ Error output:
 
 ## Supported Sites
 
-PostlightSwift includes custom extractors for optimal results on these sites:
+PostlightSwift includes 40+ custom extractors for optimal results on these sites:
 
-- **News**: NYTimes, BBC, The Guardian, Washington Post, CNN, Reuters
-- **Tech**: TechCrunch, Wired, Ars Technica, The Verge, Hacker News
-- **Platforms**: Medium, Substack, Wikipedia
+- **News**: NYTimes, BBC, The Guardian, Washington Post, CNN, Reuters, NPR, Politico, Bloomberg, CNBC, The Atlantic, Slate, Vox, NBC News, ABC News, The New Yorker, HuffPost
+- **Tech**: TechCrunch, Wired, Ars Technica, The Verge, Engadget, CNET, Gizmodo, Mashable, MacRumors, ZDNet, Lifehacker
+- **Entertainment**: Buzzfeed, Rolling Stone, Pitchfork, TMZ, People
+- **Business**: Fortune, Fast Company, Forbes, Business Insider
+- **Sports**: ESPN, Sports Illustrated, Bleacher Report
+- **Platforms**: Medium, Substack, Hacker News, Reddit, YouTube, GitHub
+- **Reference**: Wikipedia, Quartz
 
 For other sites, the generic extractor uses content scoring algorithms similar to Mozilla's Readability.
 

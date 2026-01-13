@@ -63,6 +63,7 @@ public actor ExtractorRegistry {
 
     private init() {
         // Register built-in site-specific extractors
+
         // News outlets
         extractors["www.nytimes.com"] = NYTimesExtractor()
         extractors["www.bbc.com"] = BBCExtractor()
@@ -70,20 +71,68 @@ public actor ExtractorRegistry {
         extractors["www.washingtonpost.com"] = WashingtonPostExtractor()
         extractors["www.cnn.com"] = CNNExtractor()
         extractors["www.reuters.com"] = ReutersExtractor()
+        extractors["www.npr.org"] = NPRExtractor()
+        extractors["www.politico.com"] = PoliticoExtractor()
+        extractors["www.bloomberg.com"] = BloombergExtractor()
+        extractors["www.cnbc.com"] = CNBCExtractor()
+        extractors["www.theatlantic.com"] = TheAtlanticExtractor()
+        extractors["slate.com"] = SlateExtractor()
+        extractors["www.slate.com"] = SlateExtractor()
+        extractors["www.vox.com"] = VoxExtractor()
+        extractors["www.nbcnews.com"] = NBCNewsExtractor()
+        extractors["abcnews.go.com"] = ABCNewsExtractor()
+        extractors["www.newyorker.com"] = NewYorkerExtractor()
+        extractors["www.huffpost.com"] = HuffPostExtractor()
 
         // Tech publications
         extractors["techcrunch.com"] = TechCrunchExtractor()
         extractors["www.wired.com"] = WiredExtractor()
         extractors["arstechnica.com"] = ArsTechnicaExtractor()
         extractors["www.theverge.com"] = TheVergeExtractor()
+        extractors["www.engadget.com"] = EngadgetExtractor()
+        extractors["www.cnet.com"] = CNETExtractor()
+        extractors["gizmodo.com"] = GizmodoExtractor()
+        extractors["www.gizmodo.com"] = GizmodoExtractor()
+        extractors["mashable.com"] = MashableExtractor()
+        extractors["www.mashable.com"] = MashableExtractor()
+        extractors["www.macrumors.com"] = MacRumorsExtractor()
+        extractors["www.zdnet.com"] = ZDNetExtractor()
+        extractors["lifehacker.com"] = LifehackerExtractor()
+        extractors["www.lifehacker.com"] = LifehackerExtractor()
+
+        // Entertainment
+        extractors["www.buzzfeed.com"] = BuzzfeedExtractor()
+        extractors["www.rollingstone.com"] = RollingStoneExtractor()
+        extractors["pitchfork.com"] = PitchforkExtractor()
+        extractors["www.pitchfork.com"] = PitchforkExtractor()
+        extractors["www.tmz.com"] = TMZExtractor()
+        extractors["people.com"] = PeopleExtractor()
+        extractors["www.people.com"] = PeopleExtractor()
+
+        // Business
+        extractors["fortune.com"] = FortuneExtractor()
+        extractors["www.fortune.com"] = FortuneExtractor()
+        extractors["www.fastcompany.com"] = FastCompanyExtractor()
+        extractors["www.forbes.com"] = ForbesExtractor()
+        extractors["www.businessinsider.com"] = BusinessInsiderExtractor()
+
+        // Sports
+        extractors["www.espn.com"] = ESPNExtractor()
+        extractors["www.si.com"] = SportsIllustratedExtractor()
+        extractors["bleacherreport.com"] = BleacherReportExtractor()
+        extractors["www.bleacherreport.com"] = BleacherReportExtractor()
 
         // Platforms
         extractors["medium.com"] = MediumExtractor()
         extractors["substack.com"] = SubstackExtractor()
         extractors["news.ycombinator.com"] = HackerNewsExtractor()
+        extractors["www.reddit.com"] = RedditExtractor()
+        extractors["www.youtube.com"] = YouTubeExtractor()
+        extractors["github.com"] = GitHubExtractor()
 
         // Reference
         extractors["en.wikipedia.org"] = WikipediaExtractor()
+        extractors["qz.com"] = QuartzExtractor()
     }
 
     /// Registers an extractor for its domain.
