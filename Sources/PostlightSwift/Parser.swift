@@ -47,8 +47,8 @@ public actor Parser {
         // Fetch resource
         let (data, response) = try await fetchResource(url: url, headers: options.headers)
 
-        // Create document
-        let encoding = extractEncoding(from: response)
+        // Create document with proper encoding detection
+        let encoding = extractEncoding(from: response, data: data)
         let document = try Document(data: data, encoding: encoding, baseURL: url)
 
         // Get appropriate extractor
@@ -170,28 +170,21 @@ public actor Parser {
         try await httpClient.fetch(url: url, headers: headers)
     }
 
-    private func extractEncoding(from response: HTTPURLResponse) -> String.Encoding? {
-        guard let contentType = response.value(forHTTPHeaderField: "Content-Type") else {
+    private func extractEncoding(from response: HTTPURLResponse, data: Data? = nil) -> String.Encoding? {
+        let contentType = response.value(forHTTPHeaderField: "Content-Type")
+        let detector = EncodingDetector()
+
+        // If we have data, use full detection
+        if let data = data {
+            return detector.detect(data: data, contentType: contentType)
+        }
+
+        // Otherwise just parse Content-Type header
+        guard let contentType = contentType else {
             return nil
         }
 
-        // Extract charset from Content-Type header
-        let pattern = /charset=([^\s;]+)/
-        if let match = contentType.firstMatch(of: pattern) {
-            let charset = String(match.1).lowercased()
-            switch charset {
-            case "utf-8", "utf8":
-                return .utf8
-            case "iso-8859-1", "latin1":
-                return .isoLatin1
-            case "windows-1252":
-                return .windowsCP1252
-            default:
-                return nil
-            }
-        }
-
-        return nil
+        return detector.encoding(fromName: contentType)
     }
 
     private func extract(
@@ -391,25 +384,33 @@ public actor Parser {
             return html
 
         case .markdown:
-            // TODO: Implement HTML to Markdown conversion
-            return htmlToMarkdown(html)
+            let converter = HTMLToMarkdown()
+            do {
+                return try converter.convert(html)
+            } catch {
+                // Fall back to basic regex conversion on error
+                return basicHTMLToMarkdown(html)
+            }
 
         case .text:
-            return htmlToText(html)
+            let converter = HTMLToText()
+            do {
+                return try converter.convert(html)
+            } catch {
+                // Fall back to basic regex conversion on error
+                return basicHTMLToText(html)
+            }
         }
     }
 
-    private func htmlToMarkdown(_ html: String) -> String {
-        // Basic HTML to Markdown conversion
+    /// Basic fallback HTML to Markdown conversion using regex.
+    private func basicHTMLToMarkdown(_ html: String) -> String {
         var markdown = html
 
         // Headers
         markdown = markdown.replacingOccurrences(of: "<h1[^>]*>(.*?)</h1>", with: "# $1\n\n", options: .regularExpression)
         markdown = markdown.replacingOccurrences(of: "<h2[^>]*>(.*?)</h2>", with: "## $1\n\n", options: .regularExpression)
         markdown = markdown.replacingOccurrences(of: "<h3[^>]*>(.*?)</h3>", with: "### $1\n\n", options: .regularExpression)
-        markdown = markdown.replacingOccurrences(of: "<h4[^>]*>(.*?)</h4>", with: "#### $1\n\n", options: .regularExpression)
-        markdown = markdown.replacingOccurrences(of: "<h5[^>]*>(.*?)</h5>", with: "##### $1\n\n", options: .regularExpression)
-        markdown = markdown.replacingOccurrences(of: "<h6[^>]*>(.*?)</h6>", with: "###### $1\n\n", options: .regularExpression)
 
         // Bold and italic
         markdown = markdown.replacingOccurrences(of: "<strong[^>]*>(.*?)</strong>", with: "**$1**", options: .regularExpression)
@@ -420,14 +421,8 @@ public actor Parser {
         // Links
         markdown = markdown.replacingOccurrences(of: "<a[^>]*href=\"([^\"]+)\"[^>]*>(.*?)</a>", with: "[$2]($1)", options: .regularExpression)
 
-        // Images
-        markdown = markdown.replacingOccurrences(of: "<img[^>]*src=\"([^\"]+)\"[^>]*alt=\"([^\"]+)\"[^>]*>", with: "![$2]($1)", options: .regularExpression)
-        markdown = markdown.replacingOccurrences(of: "<img[^>]*src=\"([^\"]+)\"[^>]*>", with: "![]($1)", options: .regularExpression)
-
-        // Paragraphs
+        // Paragraphs and line breaks
         markdown = markdown.replacingOccurrences(of: "<p[^>]*>(.*?)</p>", with: "$1\n\n", options: .regularExpression)
-
-        // Line breaks
         markdown = markdown.replacingOccurrences(of: "<br[^>]*>", with: "\n", options: .regularExpression)
 
         // Remove remaining tags
@@ -439,7 +434,8 @@ public actor Parser {
         return markdown.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
-    private func htmlToText(_ html: String) -> String {
+    /// Basic fallback HTML to plain text conversion using regex.
+    private func basicHTMLToText(_ html: String) -> String {
         var text = html
 
         // Replace block elements with newlines
