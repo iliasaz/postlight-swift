@@ -2,6 +2,22 @@ import ArgumentParser
 import Foundation
 import PostlightSwift
 
+#if canImport(Darwin)
+import Darwin
+#elseif canImport(Glibc)
+import Glibc
+#endif
+
+/// Thread-safe stderr printing
+@inline(__always)
+nonisolated func printStderr(_ message: String) {
+    #if canImport(Darwin)
+    fputs(message, Darwin.stderr)
+    #elseif canImport(Glibc)
+    fputs(message, Glibc.stderr)
+    #endif
+}
+
 /// Command-line interface for the Postlight Parser.
 ///
 /// Usage:
@@ -126,7 +142,7 @@ struct PostlightCLI: AsyncParsableCommand {
 
         // Parse
         if verbose {
-            fputs("Parsing \(url)...\n", stderr)
+            printStderr("Parsing \(url)...\n")
         }
 
         let parser = Parser()
@@ -155,9 +171,9 @@ struct PostlightCLI: AsyncParsableCommand {
             }
 
             if verbose {
-                fputs("\nError: \(error)\n", stderr)
-                fputs("\nIf you believe this was an error, please file an issue at:\n", stderr)
-                fputs("    https://github.com/postlight/parser/issues/new\n", stderr)
+                printStderr("\nError: \(error)\n")
+                printStderr("\nIf you believe this was an error, please file an issue at:\n")
+                printStderr("    https://github.com/postlight/parser/issues/new\n")
             }
 
             throw ExitCode.failure

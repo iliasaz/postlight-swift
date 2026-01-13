@@ -34,9 +34,6 @@ let package = Package(
             dependencies: [
                 "SwiftSoup",
                 .product(name: "AsyncHTTPClient", package: "async-http-client"),
-            ],
-            swiftSettings: [
-                .enableExperimentalFeature("StrictConcurrency")
             ]
         ),
         .executableTarget(
