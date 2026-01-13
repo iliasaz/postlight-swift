@@ -1,11 +1,10 @@
 # CLAUDE.md - AI Assistant Guide for postlight-swift
 
-This document provides guidance for AI assistants working with this server-side Swift project using Hummingbird and Swift 6 concurrency.
+This document provides guidance for AI assistants working with this server-side Swift project using Swift 6 concurrency.
 
 ## Project Overview
 
 This is a server-side Swift project built with:
-- **Hummingbird 2.x** - Lightweight, flexible HTTP server framework
 - **Swift 6.x** - With modern structured concurrency
 - **Swift Package Manager** - For dependency management
 
@@ -17,15 +16,12 @@ postlight-swift/
 ├── Sources/
 │   └── App/
 │       ├── App.swift          # Entry point with @main
-│       ├── Application+build.swift  # Application configuration
-│       ├── Controllers/       # Route handlers grouped by domain
 │       ├── Models/            # Data models and DTOs
-│       ├── Middleware/        # Custom middleware
 │       ├── Services/          # Business logic layer
 │       └── Extensions/        # Swift extensions
 ├── Tests/
 │   └── AppTests/              # Unit and integration tests
-├── Resources/                 # Static files, templates
+├── Resources/                 # Static files, resources
 └── CLAUDE.md
 ```
 
@@ -35,11 +31,8 @@ postlight-swift/
 # Build the project
 swift build
 
-# Run the server (development)
+# Run the application
 swift run App
-
-# Run with specific options
-swift run App --hostname 0.0.0.0 --port 8080
 
 # Build for release
 swift build -c release
@@ -69,14 +62,12 @@ let package = Package(
         .macOS(.v14)
     ],
     dependencies: [
-        .package(url: "https://github.com/hummingbird-project/hummingbird.git", from: "2.0.0"),
         .package(url: "https://github.com/apple/swift-argument-parser.git", from: "1.3.0"),
     ],
     targets: [
         .executableTarget(
             name: "App",
             dependencies: [
-                .product(name: "Hummingbird", package: "hummingbird"),
                 .product(name: "ArgumentParser", package: "swift-argument-parser"),
             ],
             swiftSettings: [
@@ -165,138 +156,39 @@ actor DatabasePool {
 }
 ```
 
-## Hummingbird 2 Patterns
+### Async Sequences
 
-### Application Setup
+```swift
+// Use AsyncSequence for streaming data
+func processItems() async throws {
+    for await item in itemStream {
+        try await process(item)
+    }
+}
+
+// Create custom async sequences with AsyncStream
+func makeStream() -> AsyncStream<Event> {
+    AsyncStream { continuation in
+        // Yield values asynchronously
+        continuation.yield(.started)
+        continuation.finish()
+    }
+}
+```
+
+## Application Entry Point
 
 ```swift
 // Sources/App/App.swift
 import ArgumentParser
-import Hummingbird
 
 @main
 struct App: AsyncParsableCommand {
     @Option(name: .shortAndLong)
-    var hostname: String = "127.0.0.1"
-
-    @Option(name: .shortAndLong)
-    var port: Int = 8080
+    var verbose: Bool = false
 
     func run() async throws {
-        let app = try await buildApplication(
-            configuration: .init(
-                address: .hostname(hostname, port: port)
-            )
-        )
-        try await app.runService()
-    }
-}
-```
-
-### Application Configuration
-
-```swift
-// Sources/App/Application+build.swift
-import Hummingbird
-
-func buildApplication(
-    configuration: ApplicationConfiguration
-) async throws -> some ApplicationProtocol {
-    let router = Router()
-
-    // Add middleware
-    router.middlewares.add(LogRequestsMiddleware(.info))
-
-    // Configure routes
-    configureRoutes(router)
-
-    return Application(
-        router: router,
-        configuration: configuration
-    )
-}
-```
-
-### Request Context Pattern
-
-```swift
-// Custom request context for dependency injection
-struct AppRequestContext: RequestContext {
-    var coreContext: CoreRequestContextStorage
-    let database: DatabaseService
-    let logger: Logger
-
-    init(source: Source) {
-        self.coreContext = .init(source: source)
-        self.database = source.database
-        self.logger = source.logger
-    }
-}
-```
-
-### Route Handlers
-
-```swift
-// Controllers/UserController.swift
-import Hummingbird
-
-struct UserController {
-    func configure(_ router: Router<AppRequestContext>) {
-        let users = router.group("users")
-        users.get(use: list)
-        users.get(":id", use: get)
-        users.post(use: create)
-        users.put(":id", use: update)
-        users.delete(":id", use: delete)
-    }
-
-    @Sendable
-    func list(_ request: Request, context: AppRequestContext) async throws -> [UserDTO] {
-        try await context.database.users.all()
-    }
-
-    @Sendable
-    func get(_ request: Request, context: AppRequestContext) async throws -> UserDTO {
-        guard let id = context.parameters.get("id", as: UUID.self) else {
-            throw HTTPError(.badRequest, message: "Invalid user ID")
-        }
-        guard let user = try await context.database.users.find(id) else {
-            throw HTTPError(.notFound, message: "User not found")
-        }
-        return user
-    }
-
-    @Sendable
-    func create(_ request: Request, context: AppRequestContext) async throws -> Response {
-        let input = try await request.decode(as: CreateUserInput.self, context: context)
-        let user = try await context.database.users.create(input)
-        return Response(status: .created, body: .init(data: user.encode()))
-    }
-}
-```
-
-### Middleware
-
-```swift
-// Middleware/AuthMiddleware.swift
-import Hummingbird
-
-struct AuthMiddleware<Context: RequestContext>: RouterMiddleware {
-    func handle(
-        _ request: Request,
-        context: Context,
-        next: (Request, Context) async throws -> Response
-    ) async throws -> Response {
-        guard let token = request.headers.bearer else {
-            throw HTTPError(.unauthorized)
-        }
-
-        // Validate token
-        guard try await validateToken(token) else {
-            throw HTTPError(.unauthorized)
-        }
-
-        return try await next(request, context)
+        // Application logic here
     }
 }
 ```
@@ -305,11 +197,11 @@ struct AuthMiddleware<Context: RequestContext>: RouterMiddleware {
 
 ### Naming Conventions
 
-- **Types**: `PascalCase` (e.g., `UserController`, `DatabaseService`)
+- **Types**: `PascalCase` (e.g., `UserService`, `DatabasePool`)
 - **Functions/Methods**: `camelCase` (e.g., `fetchUser`, `validateToken`)
-- **Variables**: `camelCase` (e.g., `userId`, `requestContext`)
+- **Variables**: `camelCase` (e.g., `userId`, `currentState`)
 - **Constants**: `camelCase` (e.g., `defaultTimeout`, `maxRetries`)
-- **File names**: Match primary type (e.g., `UserController.swift`)
+- **File names**: Match primary type (e.g., `UserService.swift`)
 - **Extensions**: `Type+Protocol.swift` (e.g., `User+Codable.swift`)
 
 ### Documentation
@@ -328,21 +220,20 @@ func fetchUser(id: UUID) async throws -> User?
 
 ```swift
 // Define domain-specific errors
-enum AppError: Error, HTTPResponseError {
+enum AppError: Error, LocalizedError {
     case userNotFound(UUID)
     case invalidInput(String)
-    case databaseError(Error)
+    case networkError(Error)
 
-    var status: HTTPResponse.Status {
+    var errorDescription: String? {
         switch self {
-        case .userNotFound: return .notFound
-        case .invalidInput: return .badRequest
-        case .databaseError: return .internalServerError
+        case .userNotFound(let id):
+            return "User not found: \(id)"
+        case .invalidInput(let message):
+            return "Invalid input: \(message)"
+        case .networkError(let error):
+            return "Network error: \(error.localizedDescription)"
         }
-    }
-
-    var body: some ResponseEncodable {
-        ErrorResponse(message: self.localizedDescription)
     }
 }
 ```
@@ -378,28 +269,26 @@ final class UserServiceTests: XCTestCase {
 }
 ```
 
-### Integration Tests
+### Testing Async Code
 
 ```swift
-import Hummingbird
-import HummingbirdTesting
-import XCTest
-@testable import App
+func testAsyncOperation() async throws {
+    // Use async/await directly in tests
+    let result = try await service.performOperation()
+    XCTAssertNotNil(result)
+}
 
-final class UserControllerTests: XCTestCase {
-    func testGetUserReturns200() async throws {
-        let app = try await buildApplication(
-            configuration: .init(address: .hostname("localhost", port: 0))
-        )
-
-        try await app.test(.router) { client in
-            try await client.execute(
-                uri: "/users/\(testUserId)",
-                method: .get
-            ) { response in
-                XCTAssertEqual(response.status, .ok)
-            }
+func testWithTimeout() async throws {
+    // Use Task with timeout for long-running operations
+    let result = try await withThrowingTaskGroup(of: Result.self) { group in
+        group.addTask {
+            try await self.service.longOperation()
         }
+        group.addTask {
+            try await Task.sleep(for: .seconds(5))
+            throw TimeoutError()
+        }
+        return try await group.next()!
     }
 }
 ```
@@ -408,13 +297,11 @@ final class UserControllerTests: XCTestCase {
 
 ```swift
 // Typical server-side Swift dependencies
-.package(url: "https://github.com/hummingbird-project/hummingbird.git", from: "2.0.0"),
-.package(url: "https://github.com/hummingbird-project/hummingbird-auth.git", from: "2.0.0"),
-.package(url: "https://github.com/hummingbird-project/hummingbird-fluent.git", from: "2.0.0"),
-.package(url: "https://github.com/vapor/fluent-postgres-driver.git", from: "2.8.0"),
 .package(url: "https://github.com/apple/swift-argument-parser.git", from: "1.3.0"),
 .package(url: "https://github.com/apple/swift-log.git", from: "1.5.0"),
+.package(url: "https://github.com/apple/swift-nio.git", from: "2.65.0"),
 .package(url: "https://github.com/swift-server/swift-service-lifecycle.git", from: "2.0.0"),
+.package(url: "https://github.com/swift-server/async-http-client.git", from: "1.20.0"),
 ```
 
 ## Environment Configuration
@@ -422,17 +309,17 @@ final class UserControllerTests: XCTestCase {
 ```swift
 // Use environment variables for configuration
 struct Config {
-    let databaseURL: String
-    let jwtSecret: String
+    let apiKey: String
+    let debugMode: Bool
     let port: Int
 
     init() throws {
-        guard let dbURL = Environment.get("DATABASE_URL") else {
-            throw ConfigError.missingEnvironmentVariable("DATABASE_URL")
+        guard let key = ProcessInfo.processInfo.environment["API_KEY"] else {
+            throw ConfigError.missingEnvironmentVariable("API_KEY")
         }
-        self.databaseURL = dbURL
-        self.jwtSecret = Environment.get("JWT_SECRET") ?? "development-secret"
-        self.port = Environment.get("PORT").flatMap(Int.init) ?? 8080
+        self.apiKey = key
+        self.debugMode = ProcessInfo.processInfo.environment["DEBUG"] == "true"
+        self.port = Int(ProcessInfo.processInfo.environment["PORT"] ?? "8080") ?? 8080
     }
 }
 ```
@@ -449,8 +336,7 @@ RUN swift build -c release
 FROM swift:6.0-jammy-slim
 WORKDIR /app
 COPY --from=builder /app/.build/release/App .
-EXPOSE 8080
-CMD ["./App", "--hostname", "0.0.0.0", "--port", "8080"]
+CMD ["./App"]
 ```
 
 ## Git Workflow
@@ -462,8 +348,8 @@ CMD ["./App", "--hostname", "0.0.0.0", "--port", "8080"]
 
 ## Useful Resources
 
-- [Hummingbird Documentation](https://hummingbird.codes/)
-- [Hummingbird Examples](https://github.com/hummingbird-project/hummingbird-examples)
 - [Swift on Server](https://swiftonserver.com/)
 - [Swift API Design Guidelines](https://www.swift.org/documentation/api-design-guidelines/)
 - [Swift Concurrency Guide](https://docs.swift.org/swift-book/documentation/the-swift-programming-language/concurrency/)
+- [Swift Package Manager](https://www.swift.org/documentation/package-manager/)
+- [Swift NIO](https://github.com/apple/swift-nio)
